@@ -12,7 +12,6 @@ import web3modal from "web3modal"
 import { ethers } from "ethers"
 import { contractAbi, contractAddress } from "../config";
 import axios from "axios";
-// import {testing} from './Testing'
 
 function Market() {
 
@@ -35,12 +34,16 @@ function Market() {
       provider
     );
     const data = await contract.fetchMarket();
+    console.log("data is : ", data)
     const items = await Promise.all(
       data.map(async (i) => {
-        //when the array of promises is resolved then map over each promisemui   S 8YUIOP[] C
         const tokenUri = await contract.tokenURI(i.tokenId.toString());
+        console.log("token uri is ", tokenUri)
         const trimmedTokenUri = tokenUri.substring(7);
-        const finalUri = `https://ipfs.io/ipfs/${trimmedTokenUri}`;
+        console.log('trimmed : ', trimmedTokenUri)
+        // const finalUri = `https://ipfs.io/ipfs/${trimmedTokenUri}`;
+        // const finalUri = `https://${trimmedTokenUri}.ipfs.w3s.link`;
+        // console.log("final uri : ", finalUri)
         const meta = await axios.get(finalUri);
         let price = ethers.utils.formatEther(i.price);
         let royalty = ethers.utils.formatEther(i.royaltyFeeInBips);
@@ -49,8 +52,9 @@ function Market() {
             royalty,
             name: meta.data.name,
             tokenId: i.tokenId.toNumber(),
-            image: `https://ipfs.io/ipfs/${(meta.data.image).substring(7)}`,
+            image: `https://${(meta.data.image).substring(7)}.ipfs.w3s.link`,
         };
+        console.log("each item is : ", item)
         return item;
       })
     );
@@ -59,6 +63,7 @@ function Market() {
   }
 
   console.log('nfts are : ', nfts);
+
   const cards = nfts.map( card => {
     return (
       <StoreNFTCard

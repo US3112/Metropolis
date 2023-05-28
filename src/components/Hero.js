@@ -1,9 +1,6 @@
 import React from 'react'
 import styled from 'styled-components'
 import {
-  Link,
-  Element,
-  Events,
   animateScroll as scroll,
   scroller,
 } from "react-scroll";
@@ -46,9 +43,6 @@ function Hero() {
                   </div>
                 </div>
               </div>
-              {/*<div className="s-1">
-                <img src="/images/sphere.png"/>
-              </div>*/}
             </div>
 
           </SliderSection>

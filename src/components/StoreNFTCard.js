@@ -9,6 +9,8 @@ import { contractAbi, contractAddress } from "../config";
 
 function StoreNFTCard(props) {
 
+  console.log("props : ", props)
+
   const [maticRate, setMaticRate] = useState('');
   const [isHovering, setIsHovering] = useState(false);
   const [isBuyClicked, setIsBuyClicked] = useState(false);
