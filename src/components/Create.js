@@ -28,7 +28,7 @@ function Create() {
   const contentHandle = async () => {
 
   const { name, price, royalty } = formInput;
-  console.log('this is test');
+  // console.log('this is test');
   // console.log('type of price : ', typeof(price)); string
   // console.log('type of price forum inout: ', typeof(formInput.price)); string
 
@@ -61,7 +61,24 @@ function Create() {
 }
 /*-----------------------------------------------------------------------*/
 
-// console.log('uri is : ', uri);
+/*-----------------------Biconomy Gasless Integration--------------------*/
+
+// const mintToken = async () => {
+//   const provider = new ethers.providers.Web3Provider(window.ethereum);
+//   let options = {
+//     activeNetworkId: ChainId.POLYGON_MUMBAI,
+//     supportedNetworksIds: [ ChainId.GOERLI, ChainId.POLYGON_MAINNET, ChainId.POLYGON_MUMBAI ]
+//   }
+//
+//   let smartAccount = new SmartAccount(provider, options);
+//   smartAccount = await smartAccount.init();
+//   console.log('smart account ', smartAccount);
+//   const address = smartAccount.address;
+//   console.log('address is : ', address);
+// }
+
+
+/*-----------------------------------------------------------------------*/
 
 /*-----------------code for minting the NFT------------------------------*/
 
