@@ -64,17 +64,9 @@ function Market() {
             } else {
               console.log("Invalid IPFS URL");
             }
-            // let rawUri = (imageUri.substring(0, imageUri.indexOf('/'))).replace("ipfs://", "");
             let filePath = imageUri.substring(imageUri.lastIndexOf("/") + 1);
             console.log("file path is : ", filePath)
             let imageURL = `https://${cid}.ipfs.dweb.link/${filePath}`;
-            // https://bafybeih6bljfuke6uljh5hi5xznz5a74op4psg426qm6tn6fflkj2dazzi.ipfs.dweb.link/Harmony.png
-            console.log("Image final Url : ", imageURL)
-            //  Image Uri :  ipfs://bafybeifixshehelovhqyvnuzwlhc326fgnim3kpcy5og5rxzgglp2ja5qm/jesus punk.png
-            // converytedUrl :  https://bafybeifixshehelovhqyvnuzwlhc326fgnim3kpcy5og5rxzgglp2ja5qm/jesus punk.png
-            // let convertedUrl = `https://${imageUri.substr(7)}.ipfs.w3s.link`;
-            // console.log("converytedUrl : ", convertedUrl)
-            // console.log("Image link : ", imageUri.replace("ipfs://", "https://").replace("/ipfs/", ".ipfs.w3s.link/"))
             let price = ethers.utils.formatEther(i.price);
             let royalty = ethers.utils.formatEther(i.royaltyFeeInBips);
             let item = {
@@ -82,7 +74,7 @@ function Market() {
               royalty,
               name: meta.name,
               tokenId: i.tokenId.toNumber(),
-              image:imageURL
+              image: imageURL
             };
 
             return item;
@@ -100,7 +92,6 @@ function Market() {
     setLoaded(true);
   };
 
-  // console.log('nfts are : ', nfts);
 
   const cards = nfts.map(card => {
     return (
@@ -132,9 +123,18 @@ function Market() {
             Explore, Buy NFTs
           </p>
         </Element>
-        <div className="marketplace">
-          {cards}
-        </div>
+        {
+          loaded &&
+          <div className="marketplace">
+            {cards}
+          </div>
+        }
+        {
+          !loaded &&
+          <div className='loading'>
+            <p>Loading NFTs...</p>
+          </div>
+        }
       </StoreSection>
 
     </Container >
@@ -206,6 +206,20 @@ const StoreSection = styled.div`
     grid-template-columns: 300px 300px 300px 300px;
     grid-column-gap: 69.5px;
     grid-row-gap: 46px;
+  }
+
+  .loading {
+    flex:1;
+    margin-right: 15rem;
+    margin-left: 15rem;
+    display: flex;
+    align-items: start;
+    justify-content: center;
+
+    p {
+      margin-top: 120px;
+      font-size: 22px;
+    }
   }
 
 `
