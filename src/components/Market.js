@@ -18,53 +18,91 @@ function Market() {
   const [loaded, setLoaded] = useState(false);
   const [nfts, setNfts] = useState([]);
 
-/*-----------------Code to Fetch NFT from contract----------------*/
-  useEffect( ()=> {
+  /*-----------------Code to Fetch NFT from contract----------------*/
+  useEffect(() => {
     fetchNFTs();
-  },[])
+  }, [])
+
+
+  function extractCIDFromIPFSUrl(ipfsUrl) {
+    const cidRegex = /ipfs:\/\/([a-zA-Z0-9]+)/;
+    const matches = ipfsUrl.match(cidRegex);
+
+    if (matches && matches.length > 1) {
+      const cid = matches[1];
+      return cid;
+    } else {
+      return null;
+    }
+  }
 
   const alchemyId = process.env.REACT_APP_ALCHEMY_API_KEY;
 
   const fetchNFTs = async () => {
-
     const provider = new ethers.providers.AlchemyProvider("maticmum", alchemyId);
-    const contract = new ethers.Contract(
-      contractAddress,
-      contractAbi.abi,
-      provider
-    );
+    const contract = new ethers.Contract(contractAddress, contractAbi.abi, provider);
     const data = await contract.fetchMarket();
-    console.log("data is : ", data)
+
     const items = await Promise.all(
       data.map(async (i) => {
-        const tokenUri = await contract.tokenURI(i.tokenId.toString());
-        console.log("token uri is ", tokenUri)
-        const trimmedTokenUri = tokenUri.substring(7);
-        console.log('trimmed : ', trimmedTokenUri)
-        // const finalUri = `https://ipfs.io/ipfs/${trimmedTokenUri}`;
-        // const finalUri = `https://${trimmedTokenUri}.ipfs.w3s.link`;
-        // console.log("final uri : ", finalUri)
-        const meta = await axios.get(finalUri);
-        let price = ethers.utils.formatEther(i.price);
-        let royalty = ethers.utils.formatEther(i.royaltyFeeInBips);
-        let item = {
-            price,
-            royalty,
-            name: meta.data.name,
-            tokenId: i.tokenId.toNumber(),
-            image: `https://${(meta.data.image).substring(7)}.ipfs.w3s.link`,
-        };
-        console.log("each item is : ", item)
-        return item;
+        let tokenUri = await contract.tokenURI(i.tokenId.toString());
+        let trimmedTokenUri = tokenUri.substring(7);
+        let rawURI = trimmedTokenUri.substring(0, trimmedTokenUri.indexOf('/'));
+
+        if (rawURI) {
+          const uri = `https://${rawURI}.ipfs.w3s.link/metadata.json`;
+          try {
+            const response = await fetch(uri);
+            const meta = await response.json();
+            console.log("For image : ", meta.image)
+            let imageUri = meta.image;
+            console.log("Image Uri : ", imageUri)
+            let cid = extractCIDFromIPFSUrl(imageUri);
+
+            if (cid) {
+              console.log("Extracted CID:", cid);
+            } else {
+              console.log("Invalid IPFS URL");
+            }
+            // let rawUri = (imageUri.substring(0, imageUri.indexOf('/'))).replace("ipfs://", "");
+            let filePath = imageUri.substring(imageUri.lastIndexOf("/") + 1);
+            console.log("file path is : ", filePath)
+            let imageURL = `https://${cid}.ipfs.dweb.link/${filePath}`;
+            // https://bafybeih6bljfuke6uljh5hi5xznz5a74op4psg426qm6tn6fflkj2dazzi.ipfs.dweb.link/Harmony.png
+            console.log("Image final Url : ", imageURL)
+            //  Image Uri :  ipfs://bafybeifixshehelovhqyvnuzwlhc326fgnim3kpcy5og5rxzgglp2ja5qm/jesus punk.png
+            // converytedUrl :  https://bafybeifixshehelovhqyvnuzwlhc326fgnim3kpcy5og5rxzgglp2ja5qm/jesus punk.png
+            // let convertedUrl = `https://${imageUri.substr(7)}.ipfs.w3s.link`;
+            // console.log("converytedUrl : ", convertedUrl)
+            // console.log("Image link : ", imageUri.replace("ipfs://", "https://").replace("/ipfs/", ".ipfs.w3s.link/"))
+            let price = ethers.utils.formatEther(i.price);
+            let royalty = ethers.utils.formatEther(i.royaltyFeeInBips);
+            let item = {
+              price,
+              royalty,
+              name: meta.name,
+              tokenId: i.tokenId.toNumber(),
+              image:imageURL
+            };
+
+            return item;
+          } catch (error) {
+            console.log("fetch error:", error);
+          }
+        } else {
+          console.log("Empty rawURI for tokenId:", i.tokenId.toString());
+        }
       })
     );
-    setNfts(items);
+
+    // console.log("items array is:", items.filter(Boolean));
+    setNfts(items.filter(Boolean));
     setLoaded(true);
-  }
+  };
 
-  console.log('nfts are : ', nfts);
+  // console.log('nfts are : ', nfts);
 
-  const cards = nfts.map( card => {
+  const cards = nfts.map(card => {
     return (
       <StoreNFTCard
         id={card.tokenId}
@@ -76,42 +114,42 @@ function Market() {
     )
   })
 
-/*-------------------------------------------------------------------*/
+  /*-------------------------------------------------------------------*/
 
-    return (
-        <Container>
-          <BackgroundImage>
-            <div className="left">
-              <img src="/images/grad-left.png"/>
-            </div>
-            <div className="right">
-              <img src="/images/grad-right.svg"/>
-            </div>
-          </BackgroundImage>
-          <StoreSection>
-            <Element name="market" className="heading">
-              <p>
-                Explore, Buy NFTs
-              </p>
-            </Element>
-            <div className="marketplace">
-              {cards}
-            </div>
-          </StoreSection>
+  return (
+    <Container>
+      <BackgroundImage>
+        <div className="left">
+          <img src="/images/grad-left.png" />
+        </div>
+        <div className="right">
+          <img src="/images/grad-right.svg" />
+        </div>
+      </BackgroundImage>
+      <StoreSection>
+        <Element name="market" className="heading">
+          <p>
+            Explore, Buy NFTs
+          </p>
+        </Element>
+        <div className="marketplace">
+          {cards}
+        </div>
+      </StoreSection>
 
-        </Container >
-    )
+    </Container >
+  )
 }
 
 export default Market
 
-const Container=styled.div`
+const Container = styled.div`
   height: auto;
   min-height: 1544px;
   width: 100%;
   position: relative;
 `
-const BackgroundImage=styled.div`
+const BackgroundImage = styled.div`
   position: absolute;
   top: 0;
   left: 0;
@@ -136,7 +174,7 @@ const BackgroundImage=styled.div`
   }
 `
 
-const StoreSection=styled.div`
+const StoreSection = styled.div`
   height: auto;
   min-height: 1200px;
   width: 100%;
