@@ -25,7 +25,7 @@ function Footer() {
               <div className="name-div">
                 <p>Anubhav Kumar</p>
                 <p>anubhav11697@gmail.com</p>
-                <p>3rd year college student</p>
+                <p>Junior college Student</p>
               </div>
               <div className="social-handle-div">
                 <div className="handles">
@@ -50,6 +50,34 @@ function Footer() {
                 </div>
               </div>
             </div>
+            
+          </div>
+          <div className="contributor-1">
+            <div className="main-container">
+              <div className="image-div">
+                <div className="profile-pic-div">
+                  <img src="/images/ujjwal.jpeg" />
+                </div>
+              </div>
+              <div className="name-div">
+                <p>Ujjwal  Singh</p>
+                <p>anubhav11697@gmail.com</p>
+                <p>Junior college Student</p>
+              </div>
+              <div className="social-handle-div">
+                <div className="handles">
+                  <a href="https://www.linkedin.com/in/ujjwal-singh-b32a41199/" target="_blank">
+                    <img src="/images/linkedin-logo.png" />
+                  </a>
+                </div>
+                <div className="handles">
+                  <a href="https://github.com/US3112" target="_blank">
+                    <img src="/images/github-logo.png" />
+                  </a>
+                </div>
+              </div>
+            </div>
+            
           </div>
         </Container>
     )

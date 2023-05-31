@@ -12,54 +12,88 @@ import web3modal from "web3modal"
 import { ethers } from "ethers"
 import { contractAbi, contractAddress } from "../config";
 import axios from "axios";
-// import {testing} from './Testing'
 
 function Market() {
 
   const [loaded, setLoaded] = useState(false);
   const [nfts, setNfts] = useState([]);
 
-/*-----------------Code to Fetch NFT from contract----------------*/
-  useEffect( ()=> {
+  /*-----------------Code to Fetch NFT from contract----------------*/
+  useEffect(() => {
     fetchNFTs();
-  },[])
+  }, [])
+
+
+  function extractCIDFromIPFSUrl(ipfsUrl) {
+    const cidRegex = /ipfs:\/\/([a-zA-Z0-9]+)/;
+    const matches = ipfsUrl.match(cidRegex);
+
+    if (matches && matches.length > 1) {
+      const cid = matches[1];
+      return cid;
+    } else {
+      return null;
+    }
+  }
 
   const alchemyId = process.env.REACT_APP_ALCHEMY_API_KEY;
 
   const fetchNFTs = async () => {
-
     const provider = new ethers.providers.AlchemyProvider("maticmum", alchemyId);
-    const contract = new ethers.Contract(
-      contractAddress,
-      contractAbi.abi,
-      provider
-    );
+    const contract = new ethers.Contract(contractAddress, contractAbi.abi, provider);
     const data = await contract.fetchMarket();
+
     const items = await Promise.all(
       data.map(async (i) => {
-        //when the array of promises is resolved then map over each promisemui   S 8YUIOP[] C
-        const tokenUri = await contract.tokenURI(i.tokenId.toString());
-        const trimmedTokenUri = tokenUri.substring(7);
-        const finalUri = `https://ipfs.io/ipfs/${trimmedTokenUri}`;
-        const meta = await axios.get(finalUri);
-        let price = ethers.utils.formatEther(i.price);
-        let royalty = ethers.utils.formatEther(i.royaltyFeeInBips);
-        let item = {
-            price,
-            royalty,
-            name: meta.data.name,
-            tokenId: i.tokenId.toNumber(),
-            image: `https://ipfs.io/ipfs/${(meta.data.image).substring(7)}`,
-        };
-        return item;
+        let tokenUri = await contract.tokenURI(i.tokenId.toString());
+        let trimmedTokenUri = tokenUri.substring(7);
+        let rawURI = trimmedTokenUri.substring(0, trimmedTokenUri.indexOf('/'));
+
+        if (rawURI) {
+          const uri = `https://${rawURI}.ipfs.w3s.link/metadata.json`;
+          try {
+            const response = await fetch(uri);
+            const meta = await response.json();
+            console.log("For image : ", meta.image)
+            let imageUri = meta.image;
+            console.log("Image Uri : ", imageUri)
+            let cid = extractCIDFromIPFSUrl(imageUri);
+
+            if (cid) {
+              console.log("Extracted CID:", cid);
+            } else {
+              console.log("Invalid IPFS URL");
+            }
+            let filePath = imageUri.substring(imageUri.lastIndexOf("/") + 1);
+            console.log("file path is : ", filePath)
+            let imageURL = `https://${cid}.ipfs.dweb.link/${filePath}`;
+            let price = ethers.utils.formatEther(i.price);
+            let royalty = ethers.utils.formatEther(i.royaltyFeeInBips);
+            let item = {
+              price,
+              royalty,
+              name: meta.name,
+              tokenId: i.tokenId.toNumber(),
+              image: imageURL
+            };
+
+            return item;
+          } catch (error) {
+            console.log("fetch error:", error);
+          }
+        } else {
+          console.log("Empty rawURI for tokenId:", i.tokenId.toString());
+        }
       })
     );
-    setNfts(items);
-    setLoaded(true);
-  }
 
-  console.log('nfts are : ', nfts);
-  const cards = nfts.map( card => {
+    // console.log("items array is:", items.filter(Boolean));
+    setNfts(items.filter(Boolean));
+    setLoaded(true);
+  };
+
+
+  const cards = nfts.map(card => {
     return (
       <StoreNFTCard
         id={card.tokenId}
@@ -71,42 +105,51 @@ function Market() {
     )
   })
 
-/*-------------------------------------------------------------------*/
+  /*-------------------------------------------------------------------*/
 
-    return (
-        <Container>
-          <BackgroundImage>
-            <div className="left">
-              <img src="/images/grad-left.png"/>
-            </div>
-            <div className="right">
-              <img src="/images/grad-right.svg"/>
-            </div>
-          </BackgroundImage>
-          <StoreSection>
-            <Element name="market" className="heading">
-              <p>
-                Explore, Buy NFTs
-              </p>
-            </Element>
-            <div className="marketplace">
-              {cards}
-            </div>
-          </StoreSection>
+  return (
+    <Container>
+      <BackgroundImage>
+        <div className="left">
+          <img src="/images/grad-left.png" />
+        </div>
+        <div className="right">
+          <img src="/images/grad-right.svg" />
+        </div>
+      </BackgroundImage>
+      <StoreSection>
+        <Element name="market" className="heading">
+          <p>
+            Explore, Buy NFTs
+          </p>
+        </Element>
+        {
+          loaded &&
+          <div className="marketplace">
+            {cards}
+          </div>
+        }
+        {
+          !loaded &&
+          <div className='loading'>
+            <p>Loading NFTs...</p>
+          </div>
+        }
+      </StoreSection>
 
-        </Container >
-    )
+    </Container >
+  )
 }
 
 export default Market
 
-const Container=styled.div`
+const Container = styled.div`
   height: auto;
   min-height: 1544px;
   width: 100%;
   position: relative;
 `
-const BackgroundImage=styled.div`
+const BackgroundImage = styled.div`
   position: absolute;
   top: 0;
   left: 0;
@@ -131,7 +174,7 @@ const BackgroundImage=styled.div`
   }
 `
 
-const StoreSection=styled.div`
+const StoreSection = styled.div`
   height: auto;
   min-height: 1200px;
   width: 100%;
@@ -163,6 +206,20 @@ const StoreSection=styled.div`
     grid-template-columns: 300px 300px 300px 300px;
     grid-column-gap: 69.5px;
     grid-row-gap: 46px;
+  }
+
+  .loading {
+    flex:1;
+    margin-right: 15rem;
+    margin-left: 15rem;
+    display: flex;
+    align-items: start;
+    justify-content: center;
+
+    p {
+      margin-top: 120px;
+      font-size: 22px;
+    }
   }
 
 `
