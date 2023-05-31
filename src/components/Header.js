@@ -45,7 +45,7 @@ function Header() {
 
   /*------------code to get account balance of the user------------*/
     const settings = {
-      apiKey: "L5y5rMAxy2S29WmJJkgz8x4iCkLzSEoV",
+      apiKey: "wAIvbaR-3X7X0Sy_TqATUnBmt8T5GiIU",
       network: Network.MATIC_MUMBAI,
     };
     const alchemy = new Alchemy(settings);
